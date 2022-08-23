@@ -35,4 +35,8 @@ contract MyNFT is ERC721 {
     //mapping tokenid to bidding
     mapping(uint256 => bidding) public bid;
     bool firstTime = false;
+
+    event Bid(address indexed bidder,uint256 indexed artItemId,uint256 bid,address indexed highestBidder,uint256 highestBid,uint256 highestBindingBid);
+    event Withdrawal(address indexed withdrawer, address indexed withdrawalAccount,uint256 amount);
+    event AddItem(uint256 _artItemIds, string name,address payable indexed seller,uint256 price,uint256 nowTime,uint256 timePeriod);
 }
