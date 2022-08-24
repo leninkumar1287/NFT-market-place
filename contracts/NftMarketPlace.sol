@@ -40,11 +40,11 @@ contract MyNFT is ERC721 {
     event Withdrawal(address indexed withdrawer, address indexed withdrawalAccount,uint256 amount);
     event AddItem(uint256 _artItemIds, string name,address payable indexed seller,uint256 price,uint256 timeNow,uint256 timePeriod);
 
-    constructor() public ERC721("NORTH", "NRT"){
+    constructor() ERC721("NORTH", "NRT"){
         owner = msg.sender;
     }
 
-    modifier artItemExist(uint256 id) {
+    modifier ifItemExist(uint256 id) {
         require(_artItems[id].exists, "Not Found");
         _;
     }
@@ -72,8 +72,14 @@ contract MyNFT is ERC721 {
         require(price >= 0, "Price should be greater than 0");
         _artItemIds++;
         uint256 timeNow = block.timestamp;
-        _artItems[_artItemIds] = ArtItem(msg.sender, price,tokenURI, true, _bidincrement, timeNow, timePeriod, false, false, name);
+        _artItems[_artItemIds] = ArtItem(msg.sender, price, tokenURI, true, _bidincrement, timeNow, timePeriod, false, false, name);
         emit AddItem(_artItemIds, name, msg.sender, price, timeNow, timePeriod);
+    }
+
+    function getNFT(uint256 id) public view ifItemExist(id) returns (uint256, uint256, string memory, uint256, uint256, uint256, bool, string memory, address payable){
+        ArtItem memory artItem = _artItems[id];
+        bidding memory bidd = bid[id];
+        return (id, artItem.minbid,artItem.tokenURI,bidd.highestBindingBid,artItem.time, artItem.timePeriod, artItem.cancelled, artItem.name, artItem.seller);
     }
 }
 
