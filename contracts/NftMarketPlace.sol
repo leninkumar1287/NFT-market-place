@@ -23,7 +23,7 @@ contract MyNFT is ERC721 {
         uint256 highestBindingBid;
         address payable highestBidder;
     }
-    mapping(uint256 => ArtItem) private _artItem;
+    mapping(uint256 => ArtItem) private _artItems;
     address public owner;
     uint256 public _tokenIds;
     uint256 public _artItemIds;
@@ -38,10 +38,9 @@ contract MyNFT is ERC721 {
 
     event Bid(address indexed bidder,uint256 indexed artItemId,uint256 bid,address indexed highestBidder,uint256 highestBid,uint256 highestBindingBid);
     event Withdrawal(address indexed withdrawer, address indexed withdrawalAccount,uint256 amount);
-    event AddItem(uint256 _artItemIds, string name,address payable indexed seller,uint256 price,uint256 nowTime,uint256 timePeriod);
+    event AddItem(uint256 _artItemIds, string name,address payable indexed seller,uint256 price,uint256 timeNow,uint256 timePeriod);
 
-    constructor() public ERC721("NORTH", "NRT")
-    {
+    constructor() public ERC721("NORTH", "NRT"){
         owner = msg.sender;
     }
 
@@ -53,22 +52,28 @@ contract MyNFT is ERC721 {
     modifier onlyNotOwner(uint256 id) {
         //Check if owner is calling
         ArtItem memory artItem = _artItems[id];
-        if (msg.sender == artItem.seller) 
-        revert();
+        require(msg.sender == artItem.seller);
         _;
     }
 
     modifier onlyOwner(uint256 id) {
         ArtItem memory artItem = _artItems[id];
-        if (msg.sender != artItem.seller) 
-        revert();
+        require(msg.sender != artItem.seller);
         _;
     }
 
     modifier minbid(uint256 id) {
         ArtItem memory artItem = _artItems[id];
-        if (msg.value < artItem.minbid) 
-        revert();
+        require(msg.value < artItem.minbid);
         _;
     }
+
+    function addNFT(uint256 price, string memory tokenURI, uint256 _bidincrement, uint256 timePeriod, string memory name) public {
+        require(price >= 0, "Price should be greater than 0");
+        _artItemIds++;
+        uint256 timeNow = block.timestamp;
+        _artItems[_artItemIds] = ArtItem(msg.sender, price,tokenURI, true, _bidincrement, timeNow, timePeriod, false, false, name);
+        emit AddItem(_artItemIds, name, msg.sender, price, timeNow, timePeriod);
+    }
 }
+
