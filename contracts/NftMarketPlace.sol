@@ -39,4 +39,36 @@ contract MyNFT is ERC721 {
     event Bid(address indexed bidder,uint256 indexed artItemId,uint256 bid,address indexed highestBidder,uint256 highestBid,uint256 highestBindingBid);
     event Withdrawal(address indexed withdrawer, address indexed withdrawalAccount,uint256 amount);
     event AddItem(uint256 _artItemIds, string name,address payable indexed seller,uint256 price,uint256 nowTime,uint256 timePeriod);
+
+    constructor() public ERC721("NORTH", "NRT")
+    {
+        owner = msg.sender;
+    }
+
+    modifier artItemExist(uint256 id) {
+        require(_artItems[id].exists, "Not Found");
+        _;
+    }
+
+    modifier onlyNotOwner(uint256 id) {
+        //Check if owner is calling
+        ArtItem memory artItem = _artItems[id];
+        if (msg.sender == artItem.seller) 
+        revert();
+        _;
+    }
+
+    modifier onlyOwner(uint256 id) {
+        ArtItem memory artItem = _artItems[id];
+        if (msg.sender != artItem.seller) 
+        revert();
+        _;
+    }
+
+    modifier minbid(uint256 id) {
+        ArtItem memory artItem = _artItems[id];
+        if (msg.value < artItem.minbid) 
+        revert();
+        _;
+    }
 }
