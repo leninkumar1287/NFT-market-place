@@ -1,4 +1,4 @@
 /build
 /package-lock.json
 /node_modules
-/contracts/ERC721Auction.sol
+# /contracts/ERC721Auction.sol
