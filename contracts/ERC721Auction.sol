@@ -1,4 +1,4 @@
-
+//SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
 interface IERC721 {
@@ -28,7 +28,18 @@ contract ERC721Auction {
         highestBid = _startingBid;
         highestBidder = msg.sender;
     }
-    function start() external{
+
+    modifier onlyOwner(address owner) {
+        require(owner == seller);
+        _;
+    }
+
+    modifier minbid(uint256 bidValue) {
+       require(bidValue > highestBid, "bid value is low");
+        _;
+    }
+
+    function start() onlyOwner(msg.sender)external{
         address payable owner = payable(msg.sender);
         require(owner == seller, "not a seller");
         require(!started, "started");
@@ -36,9 +47,8 @@ contract ERC721Auction {
         endAt = uint32(block.timestamp + 300);
         emit Start();
     }
-    function bid() external payable {
+    function bid() external payable minbid(msg.value){
         require(started, "Auction not started");
-        require(msg.value > highestBid, "bid value is low");
         if (highestBidder != address(0)) {
             bids[highestBidder] += highestBid;
         }
@@ -52,7 +62,7 @@ contract ERC721Auction {
         payable(msg.sender).transfer(bal);
         emit Withdraw(msg.sender, bal);
     }
-    function end() external {
+    function end() external onlyOwner(msg.sender){
         require(started, "not started");
         require(!ended, "ended!");
         require(block.timestamp >= endAt, "not ended");
