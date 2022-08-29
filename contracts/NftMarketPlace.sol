@@ -28,7 +28,6 @@ contract MyNFT is ERC721URIStorage {
     address public owner;
     uint256 public tokenIds;
     uint256 public _artItemIds;
-    bool public startAuction;
     //Unique ID up images for sale but not tokenized
     mapping(uint256 => mapping(address => uint256)) public fundsByBidder;
     //map _artItemIds to fundsByBidder
@@ -84,9 +83,6 @@ contract MyNFT is ERC721URIStorage {
         return (id, artItem.minbid,artItem.tokenURI,bidd.highestBindingBid,artItem.time, artItem.timePeriod, artItem.cancelled, artItem.name, artItem.seller);
     }
 
-    function startAuction(uint idNumber){
-
-    }
 
     function placeBid(uint256 id) public payable onlyNotOwner(id) minbid(id) returns (bool success) {
         require(msg.value == 0, "rejection of payments due to 0 ETH");
