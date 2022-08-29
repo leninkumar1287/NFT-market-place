@@ -2,14 +2,10 @@
 pragma solidity ^0.8.15;
 
 interface IERC721 {
-    function transferFrom (
-        address from,
-        address to,
-        uint nftId
-    ) external;
+    function transferFrom (address from, address to, uint nftId) external;
 }
 
-contract NftAcution {
+contract ERC721Auction {
     event Start();
     event Bid(address indexed sender, uint amount);
     event Withdraw(address indexed bidder, uint amount);
@@ -34,14 +30,14 @@ contract NftAcution {
     }
     function start() external{
         address payable owner = payable(msg.sender);
-        require(owner == seller, "not seller");
+        require(owner == seller, "not a seller");
         require(!started, "started");
         started = true;
         endAt = uint32(block.timestamp + 300);
         emit Start();
     }
     function bid() external payable {
-        require(started, "auction not started");
+        require(started, "Auction not started");
         require(msg.value > highestBid, "bid value is low");
         if (highestBidder != address(0)) {
             bids[highestBidder] += highestBid;

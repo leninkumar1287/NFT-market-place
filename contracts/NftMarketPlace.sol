@@ -26,7 +26,7 @@ contract MyNFT is ERC721URIStorage {
     }
     mapping(uint256 => ArtItem) private _artItems;
     address public owner;
-    uint256 public tokenIds;
+    uint256 public tokenIds;highestBidder
     uint256 public _artItemIds;
     //Unique ID up images for sale but not tokenized
     mapping(uint256 => mapping(address => uint256)) public fundsByBidder;
