@@ -1,28 +1,41 @@
 //SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.15;
 
-interface IERC721 {
-    function transferFrom (address from, address to, uint nftId) external;
-}
+/// @title NFT market place
+/// @notice You can use this contract for selling NFT's
+/// @dev All function calls are currently implemented without side effects
+/// @custom:experimental This is an experimental contract.
 
 contract ERC721Auction {
+
+    //Events -> this could be emitted by the related function
     event Start();
     event Bid(address indexed sender, uint amount);
     event Withdraw(address indexed bidder, uint amount);
     event End(address highestBidder, uint amount);
 
-    IERC721 public immutable nft;
-    uint public immutable nftId;
+    //State variables
+    uint nftId;
+    address nftAddress;
     address payable public immutable seller;
     uint32 public endAt;
-    bool public started;
-    bool public ended;
+    bool started;
+    bool ended;
     address public highestBidder;
     uint public highestBid;
     mapping(address => uint) bids;
 
+    // Struct for saving the auction winner details and also NFT Details
+    struct auctionWinner {
+        uint nftIdentity;
+        address buyer;
+        address seller;
+    }
+    auctionWinner[] public winnerList;
+    
+
     constructor(address _nft, uint _nftId, uint _startingBid) {
-        nft = IERC721(_nft);
+        nftAddress = _nft;
         nftId = _nftId;
         seller = payable(msg.sender);
         highestBid = _startingBid;
@@ -38,16 +51,22 @@ contract ERC721Auction {
        require(bidValue > highestBid, "bid value is low");
         _;
     }
-
+    /// @notice Starting the Auction
+    /// @dev This function will start the auction, and only the seller can start the auction
     function start() onlyOwner(msg.sender)external{
         address payable owner = payable(msg.sender);
         require(owner == seller, "not a seller");
         require(!started, "started");
         started = true;
-        endAt = uint32(block.timestamp + 300);
+        endAt = uint32(block.timestamp + 30);
         emit Start();
     }
+
+    /// @notice Bidding against the product
+    /// @dev This function will start the auction, and only the seller can start the auction
     function bid() external payable minbid(msg.value){
+        require(started, " auction not started ");
+        require(seller != msg.sender, "you cant bid");
         require(started, "Auction not started");
         if (highestBidder != address(0)) {
             bids[highestBidder] += highestBid;
@@ -56,23 +75,54 @@ contract ERC721Auction {
         highestBidder = msg.sender;
         emit Bid(msg.sender, msg.value);
     }
-    function withdraw() external {
-        uint bal = bids[msg.sender];
-        // bids[msg.sender] = 0;
-        payable(msg.sender).transfer(bal);
-        emit Withdraw(msg.sender, bal);
+
+    /// @notice withdraw the fund after the auction
+    /// @dev Here you can withdraw if you lost in auction else you will get the NFT
+    function withdraw(address bidderAddress) external {
+        require(!started, " Auction not ended");
+        uint bal = bids[bidderAddress];
+        require(bal > 0, "you dont have any bidvalues");
+        payable(bidderAddress).transfer(bal);
+        emit Withdraw(bidderAddress, bal);
     }
-    function end() external onlyOwner(msg.sender){
-        require(started, "not started");
-        require(!ended, "ended!");
-        require(block.timestamp >= endAt, "not ended");
-        ended = true;
-        if (highestBidder != address(0)) {
-            nft.transferFrom(address(this), highestBidder, nftId);
+
+    /// @notice transfer the NFT to winner of auction  
+    /// @dev It end the auction status and also its transfer the NFT to the winner in auction
+    function end() public onlyOwner(msg.sender){
+        started = false;
+        if(started == false)
+        if(highestBidder != address(0)) {
+            transferFrom(address(this), highestBidder, nftId);
             seller.transfer(highestBid);
         } else {
-            nft.transferFrom(address(this), seller, nftId);
+            transferFrom(address(this), seller, nftId);
         }
         emit End(highestBidder, highestBid);
     }
+
+    /// @notice invoke transfer function & NFT to winner of auction  
+    /// @dev Save the acution winner detail and NFT details
+    function transferFrom(address from, address to, uint _nftId) internal returns(bool){
+        auctionWinner memory result = auctionWinner(_nftId, from, to);
+        winnerList.push(result);
+        return true;
+    }
+
+    function activeStatuOfAuction() public view returns(bool) {
+        return started;
+    }
+
+    function endStatusOfAuction() public view returns(bool) {
+        return ended;
+    }
+
+    function viewHeigestBid() public view returns(address) {
+        return highestBidder;
+    }
+    
+    function balance(address requester) public view returns(uint bal) {
+        bal = address(requester).balance;
+        return bal;
+    }
+
 }
